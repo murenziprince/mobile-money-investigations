@@ -1,0 +1,18 @@
+// Q7 Shortest transfer connection - LENGTH ONLY, native shortest path. 6 is substituted into the text
+// (Cypher cannot parameterize a path bound). The all(...) predicate over nodes(p) is evaluated while the
+// breadth-first search runs, so a non-person account is never used to reach the destination.
+// No row = no route within the bound.
+MATCH (a:Account {account_id:$account}), (b:Account {account_id:$destination})
+MATCH p = shortestPath((a)-[:TRANSFER*..6]->(b))
+WHERE all(n IN nodes(p) WHERE n.role = 'person')
+RETURN length(p) AS length
+// Neo4j >= 5.21 alternative with quantified path patterns (role tested on every node during the search):
+// MATCH p = SHORTEST 1 (a)((:Account {role:'person'})-[:TRANSFER]->()){1,6}(b)
+// WHERE b.role = 'person' AND a.role = 'person'
+
+ProduceResults@neo4j  rows=1 dbHits=0 estRows=0.7500000000000001 details=length
+  Projection@neo4j  rows=1 dbHits=0 estRows=0.7500000000000001 details=length(p) AS length
+    ShortestPath@neo4j  rows=1 dbHits=10124 estRows=0.7500000000000001 details=p = (a)-[anon_0:TRANSFER*..6]->(b) WHERE all(n IN nodes(p) WHERE n.role = $autostring_0)
+      CartesianProduct@neo4j  rows=1 dbHits=0 estRows=1.0 details=
+        NodeUniqueIndexSeek@neo4j  rows=1 dbHits=2 estRows=1.0 details=UNIQUE a:Account(account_id) WHERE account_id = $account
+        NodeUniqueIndexSeek@neo4j  rows=1 dbHits=2 estRows=1.0 details=UNIQUE b:Account(account_id) WHERE account_id = $destination

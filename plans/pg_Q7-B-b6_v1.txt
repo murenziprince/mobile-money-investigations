@@ -1,0 +1,56 @@
+-- Q7 (version 1, baseline) Shortest transfer connection - LENGTH ONLY.
+-- Directed transfer neighbours over the full month, amounts and time order ignored. Every account on the
+-- route (start, intermediates, destination) must have role person; the restriction is applied DURING the
+-- search by joining to accounts at every step. NULL result = no route within the bound.
+-- Weakness: UNION de-duplicates (account, depth) pairs, so an account reached at depth 2 is expanded again
+-- at depths 3, 4 ... and every repeated payment is re-read. See plans/ for the wasted work.
+WITH RECURSIVE reach(acct, depth) AS (
+    SELECT account_id, 0 FROM accounts WHERE account_id = %(account)s AND role = 'person'
+  UNION
+    SELECT t.receiver_id, r.depth + 1
+    FROM reach r
+    JOIN transfers t ON t.sender_id = r.acct
+    JOIN accounts a  ON a.account_id = t.receiver_id AND a.role = 'person'
+    WHERE r.depth < %(bound)s
+)
+SELECT MIN(depth) AS length FROM reach WHERE acct = %(destination)s
+
+Aggregate  (cost=1783.04..1783.05 rows=1 width=4) (actual time=144981.980..144981.982 rows=1.00 loops=1)
+  Buffers: shared hit=59813610 read=246824, temp read=887 written=1827
+  CTE reach
+    ->  Recursive Union  (cost=0.42..1713.91 rows=3071 width=8) (actual time=0.012..144738.012 rows=427955.00 loops=1)
+          Storage: Disk  Maximum Storage: 8315kB
+          Buffers: shared hit=59813610 read=246824, temp read=887 written=887
+          ->  Index Scan using accounts_pkey on accounts  (cost=0.42..8.44 rows=1 width=8) (actual time=0.010..0.011 rows=1.00 loops=1)
+                Index Cond: (account_id = 147228)
+                Filter: (role = 'person'::text)
+                Index Searches: 1
+                Buffers: shared hit=4
+          ->  Nested Loop  (cost=0.98..167.48 rows=307 width=8) (actual time=4.976..20180.646 rows=1454813.43 loops=7)
+                Buffers: shared hit=59813606 read=246824, temp read=887 written=2
+                ->  Nested Loop  (cost=0.56..26.66 rows=318 width=8) (actual time=4.817..15141.868 rows=2081265.43 loops=7)
+                      Buffers: shared hit=1538174 read=246824, temp read=887 written=2
+                      ->  WorkTable Scan on reach r  (cost=0.00..0.22 rows=3 width=8) (actual time=4.334..27.305 rows=26851.00 loops=7)
+                            Filter: (depth < '6'::smallint)
+                            Rows Removed by Filter: 34285
+                            Buffers: temp read=887 written=2
+                      ->  Index Only Scan using transfers_sender_time_idx on transfers t  (cost=0.56..7.75 rows=106 width=8) (actual time=0.389..0.554 rows=77.51 loops=187957)
+                            Index Cond: (sender_id = r.acct)
+                            Heap Fetches: 1871
+                            Index Searches: 187957
+                            Buffers: shared hit=1538174 read=246824
+                ->  Index Scan using accounts_pkey on accounts a  (cost=0.42..0.44 rows=1 width=4) (actual time=0.002..0.002 rows=0.70 loops=14568858)
+                      Index Cond: (account_id = t.receiver_id)
+                      Filter: (role = 'person'::text)
+                      Rows Removed by Filter: 0
+                      Index Searches: 14568858
+                      Buffers: shared hit=58275432
+  ->  CTE Scan on reach  (cost=0.00..69.10 rows=15 width=4) (actual time=5433.470..144981.975 rows=2.00 loops=1)
+        Filter: (acct = 186823)
+        Rows Removed by Filter: 427953
+        Storage: Disk  Maximum Storage: 7520kB
+        Buffers: shared hit=59813610 read=246824, temp read=887 written=1827
+Planning:
+  Buffers: shared hit=16 read=8
+Planning Time: 4.925 ms
+Execution Time: 145001.675 ms

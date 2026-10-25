@@ -1,0 +1,11 @@
+// Q2 Daily activity over the full month, grouped by Africa/Kigali (CAT) calendar day.
+MATCH ()-[t:TRANSFER]->()
+WITH date(datetime({epochSeconds: t.occurred_at, timezone: 'Africa/Kigali'})) AS day, t
+RETURN toString(day) AS day, count(t) AS transfer_count, sum(t.amount_rwf) AS total_rwf
+ORDER BY day
+
+ProduceResults@neo4j  rows=30 dbHits=0 estRows=4472.504890997885 details=day, transfer_count, total_rwf
+  Sort@neo4j  rows=30 dbHits=0 estRows=4472.504890997885 details=day ASC
+    EagerAggregation@neo4j  rows=30 dbHits=20003300 estRows=4472.504890997885 details=toString(day) AS day, count(t) AS transfer_count, sum(t.amount_rwf) AS total_rwf
+      Projection@neo4j  rows=20003300 dbHits=60009900 estRows=20003300.0 details=date(datetime({epochSeconds: t.occurred_at, timezone: $autostring_0})) AS day
+        DirectedRelationshipTypeScan@neo4j  rows=20003300 dbHits=20003301 estRows=20003300.0 details=(anon_0)-[t:TRANSFER]->(anon_1)

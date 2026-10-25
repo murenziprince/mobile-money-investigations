@@ -1,0 +1,7 @@
+{
+  "import_seconds": 155.25,
+  "store_gb": 1.6071,
+  "transaction_log_gb": 0.0,
+  "neo4j_admin_version": "5.26.32",
+  "constraint_index_seconds": 103.96
+}

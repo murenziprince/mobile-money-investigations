@@ -1,0 +1,32 @@
+-- Q2 Daily activity over the full month, grouped by Africa/Kigali (CAT) calendar day.
+SELECT (to_timestamp(occurred_at) AT TIME ZONE 'Africa/Kigali')::date AS day,
+       COUNT(*) AS transfer_count, SUM(amount_rwf) AS total_rwf
+FROM transfers
+GROUP BY 1
+ORDER BY 1
+
+Finalize GroupAggregate  (cost=919112.54..1037258.12 rows=372089 width=20) (actual time=14199.020..14204.065 rows=30.00 loops=1)
+  Group Key: (((to_timestamp((occurred_at)::double precision) AT TIME ZONE 'Africa/Kigali'::text))::date)
+  Buffers: shared hit=35 read=147117
+  ->  Gather Merge  (cost=919112.54..1023118.74 rows=893014 width=20) (actual time=14199.010..14203.994 rows=90.00 loops=1)
+        Workers Planned: 2
+        Workers Launched: 2
+        Buffers: shared hit=35 read=147117
+        ->  Sort  (cost=918112.52..919042.74 rows=372089 width=20) (actual time=14119.086..14119.090 rows=30.00 loops=3)
+              Sort Key: (((to_timestamp((occurred_at)::double precision) AT TIME ZONE 'Africa/Kigali'::text))::date)
+              Sort Method: quicksort  Memory: 26kB
+              Buffers: shared hit=35 read=147117
+              Worker 0:  Sort Method: quicksort  Memory: 26kB
+              Worker 1:  Sort Method: quicksort  Memory: 26kB
+              ->  Partial HashAggregate  (cost=803494.26..876050.94 rows=372089 width=20) (actual time=14118.485..14118.859 rows=30.00 loops=3)
+                    Group Key: ((to_timestamp((occurred_at)::double precision) AT TIME ZONE 'Africa/Kigali'::text))::date
+                    Planned Partitions: 8  Batches: 1  Memory Usage: 1057kB
+                    Buffers: shared hit=19 read=147117
+                    Worker 0:  Batches: 1  Memory Usage: 1057kB
+                    Worker 1:  Batches: 1  Memory Usage: 1057kB
+                    ->  Parallel Seq Scan on transfers  (cost=0.00..313830.16 rows=8334708 width=8) (actual time=2.343..10853.190 rows=6667766.67 loops=3)
+                          Buffers: shared hit=19 read=147117
+Planning:
+  Buffers: shared hit=149 read=32
+Planning Time: 43.405 ms
+Execution Time: 14213.125 ms

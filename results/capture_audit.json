@@ -1,0 +1,49 @@
+{
+  "customers": {
+    "file": "D:\\Assignment II\\mobile_money_project\\data\\customers.csv",
+    "consumed": 228000,
+    "written": 228000,
+    "seconds": 2.15,
+    "size_bytes": 3581915,
+    "size_gb": 0.0036
+  },
+  "accounts": {
+    "file": "D:\\Assignment II\\mobile_money_project\\data\\accounts.csv",
+    "consumed": 248000,
+    "written": 248000,
+    "seconds": 2.41,
+    "size_bytes": 5212713,
+    "size_gb": 0.0052
+  },
+  "devices": {
+    "file": "D:\\Assignment II\\mobile_money_project\\data\\devices.csv",
+    "consumed": 228600,
+    "written": 228600,
+    "seconds": 2.35,
+    "size_bytes": 3554518,
+    "size_gb": 0.0036
+  },
+  "account_devices": {
+    "file": "D:\\Assignment II\\mobile_money_project\\data\\account_devices.csv",
+    "consumed": 285600,
+    "written": 285600,
+    "seconds": 4.31,
+    "size_bytes": 6284489,
+    "size_gb": 0.0063
+  },
+  "transfers": {
+    "file": "D:\\Assignment II\\mobile_money_project\\data\\transfers.csv",
+    "consumed": 20003300,
+    "written": 20003300,
+    "seconds": 310.78,
+    "size_bytes": 780197845,
+    "size_gb": 0.7802,
+    "transfer_count": 20003300,
+    "min_occurred_at": 1788235200,
+    "max_occurred_at": 1790798399,
+    "sum_amount_rwf": 231482327870
+  },
+  "total_seconds": 322.01,
+  "total_rows": 20993500,
+  "total_gb": 0.7988
+}

@@ -1,0 +1,20 @@
+// Q4 Ownership and device network. Cypher cannot take a parameter as a path bound, so 10 is
+// substituted into the text (an int, never user text). DISTINCT directly after the pattern lets Neo4j use
+// a pruning breadth-first expansion (look for PruningVarExpand in PROFILE) instead of enumerating every trail.
+MATCH (a:Account {account_id:$account})
+MATCH (a)-[:OWNS|USED_DEVICE*1..10]-(b:Account)
+WHERE b <> a
+WITH DISTINCT b
+MATCH (c:Customer)-[:OWNS]->(b)
+RETURN c.region AS region, count(b) AS accounts
+ORDER BY region
+
+ProduceResults@neo4j  rows=5 dbHits=0 estRows=9.005387442281556 details=region, accounts
+  Sort@neo4j  rows=5 dbHits=0 estRows=9.005387442281556 details=region ASC
+    EagerAggregation@neo4j  rows=5 dbHits=228 estRows=9.005387442281556 details=c.region AS region, count(b) AS accounts
+      Filter@neo4j  rows=228 dbHits=228 estRows=81.09700298560234 details=c:Customer
+        Expand(All)@neo4j  rows=228 dbHits=1140 estRows=81.09700298560234 details=(b)<-[anon_1:OWNS]-(c)
+          Projection@neo4j  rows=228 dbHits=0 estRows=81.09700298560234 details=b
+            Filter@neo4j  rows=228 dbHits=453 estRows=85.36526630063405 details=NOT b = a AND b:Account
+              VarLengthExpand(Pruning,BFS,All)@neo4j  rows=453 dbHits=1885 estRows=191.84999906171535 details=(a)-[:OWNS|USED_DEVICE*..10]-(b) 
+                NodeUniqueIndexSeek@neo4j  rows=1 dbHits=2 estRows=1.0 details=UNIQUE a:Account(account_id) WHERE account_id = $account

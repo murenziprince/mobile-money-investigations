@@ -1,0 +1,7 @@
+# Keep CSVs and database stores LOCAL (handout 9.2)
+data/
+*.csv
+!results/*.csv
+__pycache__/
+*.pyc
+.env

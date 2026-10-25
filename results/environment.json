@@ -1,0 +1,53 @@
+{
+  "os": "Windows 11 (10.0.22631)",
+  "cpu": "Intel64 Family 6 Model 142 Stepping 9, GenuineIntel",
+  "logical_cores": 4,
+  "ram_gb": 8.46,
+  "python": "3.14.5",
+  "psycopg_version": "3.3.6",
+  "neo4j_version": "6.4.1",
+  "numpy_version": "2.5.4",
+  "matplotlib_version": "3.11.2",
+  "postgresql_version": "PostgreSQL 18.6 on x86_64-windows, compiled by msvc-19.44.35229, 64-bit",
+  "postgresql_settings": {
+    "timezone": "Africa/Kigali",
+    "shared_buffers": "128MB",
+    "work_mem": "4MB",
+    "effective_cache_size": "4GB",
+    "maintenance_work_mem": "64MB",
+    "max_parallel_workers_per_gather": "2",
+    "max_connections": "100"
+  },
+  "neo4j_database": "neo4j",
+  "neo4j_components": [
+    {
+      "name": "Neo4j Kernel",
+      "versions": [
+        "5.26.32"
+      ],
+      "edition": "community"
+    }
+  ],
+  "neo4j_memory_settings": {
+    "db.memory.pagecache.warmup.enable": "true",
+    "db.memory.pagecache.warmup.preload": "false",
+    "db.memory.pagecache.warmup.preload.allowlist": ".*",
+    "db.memory.pagecache.warmup.profile.interval": "1m",
+    "db.memory.transaction.max": "0B",
+    "db.memory.transaction.total.max": "0B",
+    "db.tx_state.memory_allocation": "ON_HEAP",
+    "dbms.memory.tracking.enable": "true",
+    "dbms.memory.transaction.total.max": "2.46GiB",
+    "server.memory.heap.initial_size": "3.52GiB",
+    "server.memory.heap.max_size": "3.52GiB",
+    "server.memory.off_heap.block_cache_size": "128",
+    "server.memory.off_heap.max_cacheable_block_size": "512.00KiB",
+    "server.memory.off_heap.transaction_max_size": "2.00GiB",
+    "server.memory.pagecache.directio": "false",
+    "server.memory.pagecache.flush.buffer.enabled": "false",
+    "server.memory.pagecache.flush.buffer.size_in_pages": "128",
+    "server.memory.pagecache.scan.prefetchers": "4",
+    "server.memory.pagecache.size": "1.95GiB",
+    "server.memory.query_cache.per_db_cache_num_entries": "1000"
+  }
+}

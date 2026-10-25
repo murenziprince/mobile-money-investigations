@@ -1,0 +1,104 @@
+-- Q7 (version 2, improved) Shortest transfer connection - LENGTH ONLY, bidirectional search.
+-- Search forward from the review account (depth <= ceil(bound/2)) and backward from the destination
+-- along incoming transfers (depth <= floor(bound/2)); the shortest route of length L <= bound always has
+-- a middle account at forward depth ceil(L/2) and backward depth floor(L/2), so
+-- MIN(forward depth + backward depth) over common accounts is exactly the shortest length.
+-- Two half-depth searches replace one full-depth search, avoiding the largest frontier levels.
+-- Person-only restriction applied in both searches. NULL = no route within the bound.
+WITH RECURSIVE fwd(acct, depth) AS (
+    SELECT account_id, 0 FROM accounts WHERE account_id = %(account)s AND role = 'person'
+  UNION
+    SELECT t.receiver_id, f.depth + 1
+    FROM fwd f
+    JOIN transfers t ON t.sender_id = f.acct
+    JOIN accounts a  ON a.account_id = t.receiver_id AND a.role = 'person'
+    WHERE f.depth < (%(bound)s + 1) / 2
+), bwd(acct, depth) AS (
+    SELECT account_id, 0 FROM accounts WHERE account_id = %(destination)s AND role = 'person'
+  UNION
+    SELECT t.sender_id, b.depth + 1
+    FROM bwd b
+    JOIN transfers t ON t.receiver_id = b.acct
+    JOIN accounts a  ON a.account_id = t.sender_id AND a.role = 'person'
+    WHERE b.depth < %(bound)s / 2
+)
+SELECT MIN(f.depth + b.depth) AS length
+FROM fwd f JOIN bwd b ON b.acct = f.acct
+
+Aggregate  (cost=9355.49..9355.50 rows=1 width=4) (actual time=389.749..389.754 rows=1.00 loops=1)
+  Buffers: shared hit=111124 read=610
+  CTE fwd
+    ->  Recursive Union  (cost=0.42..1713.91 rows=3071 width=8) (actual time=0.025..133.973 rows=2216.00 loops=1)
+          Storage: Memory  Maximum Storage: 101kB
+          Buffers: shared hit=59608 read=208
+          ->  Index Scan using accounts_pkey on accounts  (cost=0.42..8.44 rows=1 width=8) (actual time=0.022..0.023 rows=1.00 loops=1)
+                Index Cond: (account_id = 147228)
+                Filter: (role = 'person'::text)
+                Index Searches: 1
+                Buffers: shared hit=4
+          ->  Nested Loop  (cost=0.98..167.48 rows=307 width=8) (actual time=0.124..32.630 rows=2530.50 loops=4)
+                Buffers: shared hit=59604 read=208
+                ->  Nested Loop  (cost=0.56..26.66 rows=318 width=8) (actual time=0.118..23.794 rows=3627.00 loops=4)
+                      Buffers: shared hit=1572 read=208
+                      ->  WorkTable Scan on fwd f_1  (cost=0.00..0.22 rows=3 width=8) (actual time=0.021..0.048 rows=47.00 loops=4)
+                            Filter: (depth < 3)
+                            Rows Removed by Filter: 507
+                      ->  Index Only Scan using transfers_sender_time_idx on transfers t  (cost=0.56..7.75 rows=106 width=8) (actual time=0.336..0.496 rows=77.17 loops=188)
+                            Index Cond: (sender_id = f_1.acct)
+                            Heap Fetches: 4
+                            Index Searches: 188
+                            Buffers: shared hit=1572 read=208
+                ->  Index Scan using accounts_pkey on accounts a  (cost=0.42..0.44 rows=1 width=4) (actual time=0.002..0.002 rows=0.70 loops=14508)
+                      Index Cond: (account_id = t.receiver_id)
+                      Filter: (role = 'person'::text)
+                      Rows Removed by Filter: 0
+                      Index Searches: 14508
+                      Buffers: shared hit=58032
+  CTE bwd
+    ->  Recursive Union  (cost=0.42..4263.07 rows=7971 width=8) (actual time=0.008..251.418 rows=2560.00 loops=1)
+          Storage: Memory  Maximum Storage: 128kB
+          Buffers: shared hit=51516 read=402
+          ->  Index Scan using accounts_pkey on accounts accounts_1  (cost=0.42..8.44 rows=1 width=8) (actual time=0.006..0.007 rows=1.00 loops=1)
+                Index Cond: (account_id = 186823)
+                Filter: (role = 'person'::text)
+                Index Searches: 1
+                Buffers: shared hit=4
+          ->  Nested Loop  (cost=0.98..417.49 rows=797 width=8) (actual time=1.397..61.922 rows=2809.75 loops=4)
+                Buffers: shared hit=51512 read=402
+                ->  Nested Loop  (cost=0.56..52.60 rows=824 width=8) (actual time=1.379..53.782 rows=3120.75 loops=4)
+                      Buffers: shared hit=1580 read=402
+                      ->  WorkTable Scan on bwd b_1  (cost=0.00..0.22 rows=3 width=8) (actual time=0.024..0.057 rows=52.50 loops=4)
+                            Filter: (depth < 3)
+                            Rows Removed by Filter: 588
+                      ->  Index Only Scan using transfers_receiver_time_idx on transfers t_1  (cost=0.56..14.71 rows=275 width=8) (actual time=0.868..1.016 rows=59.44 loops=210)
+                            Index Cond: (receiver_id = b_1.acct)
+                            Heap Fetches: 0
+                            Index Searches: 210
+                            Buffers: shared hit=1580 read=402
+                ->  Index Scan using accounts_pkey on accounts a_1  (cost=0.42..0.44 rows=1 width=4) (actual time=0.002..0.002 rows=0.90 loops=12483)
+                      Index Cond: (account_id = t_1.sender_id)
+                      Filter: (role = 'person'::text)
+                      Rows Removed by Filter: 0
+                      Index Searches: 12483
+                      Buffers: shared hit=49932
+  ->  Merge Join  (cost=915.26..2766.54 rows=122395 width=8) (actual time=389.334..389.744 rows=26.00 loops=1)
+        Merge Cond: (f.acct = b.acct)
+        Buffers: shared hit=111124 read=610
+        ->  Sort  (cost=239.30..246.98 rows=3071 width=8) (actual time=135.746..135.842 rows=2216.00 loops=1)
+              Sort Key: f.acct
+              Sort Method: quicksort  Memory: 148kB
+              Buffers: shared hit=59608 read=208
+              ->  CTE Scan on fwd f  (cost=0.00..61.42 rows=3071 width=8) (actual time=0.042..134.984 rows=2216.00 loops=1)
+                    Storage: Memory  Maximum Storage: 102kB
+                    Buffers: shared hit=59608 read=208
+        ->  Sort  (cost=675.96..695.89 rows=7971 width=8) (actual time=253.516..253.615 rows=2564.00 loops=1)
+              Sort Key: b.acct
+              Sort Method: quicksort  Memory: 157kB
+              Buffers: shared hit=51516 read=402
+              ->  CTE Scan on bwd b  (cost=0.00..159.42 rows=7971 width=8) (actual time=0.009..252.580 rows=2560.00 loops=1)
+                    Storage: Memory  Maximum Storage: 113kB
+                    Buffers: shared hit=51516 read=402
+Planning:
+  Buffers: shared hit=26 read=10
+Planning Time: 3.432 ms
+Execution Time: 390.789 ms
